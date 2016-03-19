@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "gulp": "^3.8.11",
+    "gulp-autoprefixer"  : "^2.3.1",
+    "gulp-minify-html"   : "*",
+    "gulp-replace"       : "^0.5.3",
+    "gulp-minify-css"    : "*",
+    "gulp-concat"        : "*",
+    "gulp-uglify"        : "*",
+    "gulp-inline-source" : "*",
+    "gulp-zip"           : "*"
+
+  }
+}

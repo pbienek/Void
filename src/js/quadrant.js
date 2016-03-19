@@ -1,0 +1,7 @@
+$.Quadrant = function () {};
+
+$.Quadrant.prototype = {
+
+
+
+};

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Deceleration test</title>
+</head>
+<body>
+
+<style>
+
+    #test {
+        margin:0 auto;
+        background: grey;
+    }
+
+</style>
+
+
+<canvas id="test" width="960" height="400"></canvas>
+
+
+
+
+
+<script>
+
+    var testElement   = document.getElementById('test');
+    canvas  = testElement.getContext('2d');
+    canvas.imageSmoothingEnabled = true;
+
+
+    function getDistance(current_pos_X, current_pos_Y, target_pos_X, target_pos_Y) {
+        //THANKS TO - http://snipplr.com/view/47207/
+        var XS,
+                YS = 0;
+
+        XS = current_pos_X - target_pos_X;
+        XS = (XS * XS);
+
+        YS = current_pos_Y - target_pos_Y;
+        YS = (YS * YS);
+
+        return Math.sqrt(XS + YS);
+
+    }
+
+
+    function speedLimit(speed, top_speed) {
+
+        // CLAMP top speed - Otherwise the PlaYer accelerates indefinitelY
+        if (Math.abs(speed) > top_speed) {
+            if (speed > 0) {
+                speed = top_speed;
+            } else {
+                speed = (0 - top_speed);
+            }
+        }
+
+        return speed;
+    }
+
+
+    var car = function () {
+
+        this.x = 50;
+        this.y = 50;
+
+        //  POSITIONAL & PHYSICS
+        this.rotation         = 0;
+        this.velocityX        = 0;
+        this.velocityY        = 0;
+        this.topSpeed         = 10;
+        this.friction         = 0.00;
+        this.acceleration     = 0.03;
+        this.stoppingDistance = 100;
+
+        this.targetDestination = {
+            x : 910,
+            y : 300,
+            distance : 0
+        };
+
+        document.getElementById("test").addEventListener('mousemove', function (e) {
+            this.targetDestination.x = e.offsetX;
+            this.targetDestination.y = e.offsetY;
+        }.bind(this));
+
+
+
+        var draw = function () {
+
+            canvas.clearRect(0, 0, 960, 400);
+
+            canvas.beginPath();
+            canvas.arc(this.x, this.y, 10, 0, 2 * Math.PI, false);
+            canvas.fillStyle = '#fff';
+            canvas.fill();
+
+            canvas.beginPath();
+            canvas.arc(this.targetDestination.x, this.targetDestination.y, 10, 0, 2 * Math.PI, false);
+            canvas.fillStyle = 'red';
+            canvas.fill();
+
+        }.bind(this);
+
+
+
+
+        var update = function() {
+
+            this.targetDestination.distance = getDistance(this.x, this.y, this.targetDestination.x, this.targetDestination.y);// - this.stoppingDistance;
+
+            //Calculate stopping distance
+            var timeToStop = function () {
+                var relativeSpeed     = Math.sqrt((this.velocityX*this.velocityX) + (this.velocityY*this.velocityY));
+                var timeToDestination = Math.round(this.targetDestination.distance /relativeSpeed);
+                var decelerationTime  = Math.round(relativeSpeed/this.acceleration);
+
+                var decel = function() {
+                    var currentSpeed = parseFloat(relativeSpeed);
+                    var negativeVelocity = 0;
+                    var framesTaken = 0;
+
+                    while(currentSpeed > 0) {
+
+                        if (negativeVelocity < this.topSpeed) {
+                            negativeVelocity += this.acceleration;
+                        }
+                        currentSpeed -= (this.acceleration / 0.52);//negativeVelocity;
+                        framesTaken++;
+                    }
+
+                    return framesTaken;
+
+                }.bind(this);
+
+
+
+                return (timeToDestination <= decel());
+            }.bind(this);
+
+
+            var moveToTarget = function() {
+
+                var dx    = (this.targetDestination.x - this.x),
+                        dy    = (this.targetDestination.y - this.y),
+                        vel   = {},
+                        angle = Math.atan2(dy, dx);
+
+                vel.x = this.acceleration * Math.cos(angle);
+                vel.y = this.acceleration * Math.sin(angle);
+
+                this.velocityX += vel.x - this.friction;
+                this.velocityY += vel.y - this.friction;
+
+            }.bind(this);
+
+
+
+            var decelerate = function () {
+
+                var dx    = (this.targetDestination.x - this.x),
+                    dy    = (this.targetDestination.y - this.y),
+                    vel   = {},
+                    angle = Math.atan2(dy, dx);
+
+                vel.x = this.acceleration * Math.cos(angle);
+                vel.y = this.acceleration * Math.sin(angle);
+
+                this.velocityX -= vel.x - this.friction;
+                this.velocityY -= vel.y - this.friction;
+
+            }.bind(this);
+
+
+            if (Math.abs(this.targetDestination.distance) >= this.acceleration) {
+
+                if (timeToStop()) {
+                    console.log('DECELERATE');
+                    decelerate();
+                } else {
+                    console.log('MOVE TO TARGET');
+                    moveToTarget();
+                }
+           } else {
+               this.velocityX = 0;
+               this.velocityY = 0;
+           }
+
+            this.velocityX = speedLimit(this.velocityX,  this.topSpeed);
+            this.velocityY = speedLimit(this.velocityY,  this.topSpeed);
+
+
+            this.x += this.velocityX;
+            this.y += this.velocityY;
+
+
+        }.bind(this);
+
+
+        function animateMe() {
+            update();
+            draw();
+            requestAnimationFrame(animateMe);
+        }
+        animateMe();
+
+
+    };
+
+    car();
+
+
+
+
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

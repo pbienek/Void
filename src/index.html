@@ -1,0 +1,272 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <!--css_replace-->
+        <link rel="stylesheet" href="css/main.css">
+        <!--css_replace_end-->
+    </head>
+    <body id="Reversed" onresize="$.resizeElements();">
+
+        <span id="fps"></span>
+
+        <div id="game-container" class="canvas-wrap">
+
+            <div class="scanlines-overlay"></div>
+
+
+            <div id="start-screen" class="game-menu open">
+                <h1 class="station-title start">VOID</h1>
+                <!--<h1 class="station-title start">VACUUM SALESMAN</h1>-->
+
+                <p>Welcome Trader.</p>
+                <p>This is a cruel UNIVERSE and if you're to avoid assassination by pirates you must quickly seek refuge at a StarBase.</p>
+                <p>You must trade wisely between bases if you're to afford the upgrades you need to survive out here.</p>
+                <p>Good luck</p>
+
+                <b>Controls:</b>
+                <p>[Left Mouse]  - Engage Thrusters</p>
+                <p>[Right Mouse] - Fire Weapons</p>
+                <p>[P] - Pause Game play</p>
+                <!--<p>You're in a vacuum so once you get moving you must reverse your thrusters to slow down.</p>-->
+                <!--<p>Use your fuel sparingly if you're to avoid aimlessly drifting into the unknown.</p>-->
+                <span class="exit-button start" onclick="$.UI.startGame()" >START</span>
+            </div>
+
+
+            <!--<div id="pause-menu" class="game-menu">-->
+                <!--<h3 class="station-title">GAME IS PAUSED</h3>-->
+                <!--<div id="inventory2" class="warez active">-->
+                    <!--<b>CARGO BAY</b>-->
+                    <!--<table cellspacing="0" cellpadding="0">-->
+                        <!--<thead>-->
+                        <!--<tr>-->
+                            <!--<th>QNT</th>-->
+                            <!--<th>ITEM</th>-->
+                            <!--<th>DESCRIPTION</th>-->
+                            <!--<th>NET VALUE</th>-->
+                        <!--</tr>-->
+                        <!--</thead>-->
+                        <!--<tbody id="cargobay2"></tbody>-->
+                    <!--</table>-->
+                <!--</div>-->
+                <!--<span class="exit-button" onclick="$.UI.closePauseMenu()" >Exit</span>-->
+            <!--</div>-->
+
+
+            <div id="station-menu" class="game-menu">
+                <h3 class="station-title"></h3>
+                <span class="monnies">credits: <span id="credits"></span><span class="lwrC">c</span></span>
+
+                <div class="tabs">
+                    <span id="marketTab"    onclick="$.UI.handleTabs('market');"    class="tab active">Market</span>
+                    <span id="servicesTab"  onclick="$.UI.handleTabs('services');"  class="tab">Services</span>
+                    <span id="upgradesTab"  onclick="$.UI.handleTabs('upgrades');"  class="tab">Upgrades</span>
+                    <span id="inventoryTab" onclick="$.UI.handleTabs('inventory');" class="tab">Inventory</span>
+                </div>
+
+                <div id="market" class="warez active">
+                    <table cellspacing="0" cellpadding="0">
+                        <thead>
+                            <tr>
+                                <th>QNT</th>
+                                <th>ITEM</th>
+                                <th>DESCRIPTION</th>
+                                <th>PRICE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="market_stock"></tbody>
+                    </table>
+                </div>
+
+
+                <div id="inventory" class="warez">
+                    <table cellspacing="0" cellpadding="0">
+                        <thead>
+                        <tr>
+                            <th>QNT</th>
+                            <th>ITEM</th>
+                            <th>NET VALUE</th>
+                            <th>SALE PRICE</th>
+                            <th>PROFIT</th>
+                        </tr>
+                        </thead>
+                        <tbody id="cargobay"></tbody>
+                    </table>
+                </div>
+
+                <div id="services" class="warez">
+                    <table cellspacing="0" cellpadding="0">
+                        <thead>
+                        <tr>
+                            <th>ITEM</th>
+                            <th>AMOUNT</th>
+                            <th>PRICE</th>
+                        </tr>
+                        </thead>
+                        <tbody id="services-menu">
+                            <tr id="fuel">
+                                <td>REFUEL</td>
+                                <td>
+                                    <input onchange="$.UI.servicesRange('fuel')" id="fuel_slider" type="range" min="0" max="1000" step="1" value="0"/>
+                                </td>
+                                <td class="amount">0<span class="lwrC">c</span></td>
+                                <td>
+                                    <button class="button" onclick="$.UI.buyService('fuel')">BUY</button>
+                                </td>
+                            </tr>
+
+                            <tr id="hull">
+                                <td>REPAIR HULL</td>
+                                <td>
+                                    <input onchange="$.UI.servicesRange('hull')" id="hull_slider" type="range" min="0" max="1000" step="1" value="0"/>
+                                </td>
+                                <td class="amount">0.00<span class="lwrC">c</span></td>
+                                <td>
+                                    <button class="button" onclick="$.UI.buyService('hull')">BUY</button>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="upgrades" class="warez">
+
+                    <table cellspacing="0" cellpadding="0">
+                        <thead>
+                        <tr>
+                            <th>NAME</th>
+                            <th>DESCRIPTION</th>
+                            <th>LEVEL</th>
+                            <th>PRICE</th>
+                        </tr>
+                        </thead>
+                        <tbody id="upgrades_table">
+
+                        </tbody>
+                    </table>
+
+
+                </div>
+
+
+                <span class="exit-button" onclick="$.UI.closeStationMenu()" >Exit</span>
+            </div><!--end of station menu-->
+
+
+
+            <canvas id="universe"    class="canvas_layer main" ></canvas>
+            <canvas id="objects"     class="canvas_layer main" ></canvas>
+            <canvas id="ships"       class="canvas_layer main" ></canvas>
+            <canvas id="projectiles" class="canvas_layer main" ></canvas>
+            <canvas id="player"      class="canvas_layer main" ></canvas>
+            <canvas id="particles"   class="canvas_layer main" ></canvas>
+
+
+            <div id="ui-elements">
+
+                <!--<span class="hoz"></span>-->
+                <!--<span class="vert"></span>-->
+
+
+                <div class="hud">
+                    <!--<span class="score">SCORE: 0000</span>-->
+                    <!--<span class="credits">CREDITS: 0000</span>-->
+
+
+                    <span class="gauge hull">
+                        <div class="bar">
+                            <div class="remaining"></div>
+                        </div>
+                        <span class="label">HULL</span>
+                    </span>
+
+                    <span class="gauge shields">
+                        <div class="bar">
+                            <div class="remaining"></div>
+                        </div>
+                        <span class="label">SHIELDS</span>
+                    </span>
+
+                    <div class="gauge fuel">
+                        <div class="bar">
+                            <div class="remaining"></div>
+                        </div>
+                        <span class="label">FUEL</span>
+                    </div>
+
+
+
+                    <div class="velocity-meter"></div>
+
+
+
+                    <div id="message"></div>
+
+
+
+
+                    <div  class="map">
+                        <canvas id="ship-map" class="canvas_layer" width="150" height="150"></canvas>
+                    </div>
+                </div>
+
+
+                <!--<div class="hud glow">-->
+                    <!--<span class="score">SCORE: 0000</span>-->
+                    <!--<span class="credits">CREDITS: 0000</span>-->
+                    <!--<span class="gauge hull">-->
+                        <!--<div class="bar">-->
+                        <!--</div>-->
+                        <!--<span class="label">HULL</span>-->
+                    <!--</span>-->
+
+                    <!--<span class="gauge shields">-->
+                        <!--<div class="bar">-->
+                        <!--</div>-->
+                        <!--<span class="label">SHIELDS</span>-->
+                    <!--</span>-->
+
+                    <!--<div class="gauge fuel">-->
+                        <!--<div class="bar">-->
+                        <!--</div>-->
+                        <!--<span class="label">FUEL</span>-->
+                    <!--</div>-->
+
+                    <!--<div  class="map">-->
+
+                    <!--</div>-->
+                <!--</div>-->
+
+
+            </div>
+
+
+        </div>
+
+        <script>$ = {}</script>
+
+
+        <!--js_replace-->
+        <script src="js/utils.js"></script>
+        <script src="js/sfxr.js"></script>
+        <script src="js/controls.js"></script>
+        <script src="js/projectiles.js"></script>
+        <script src="js/particles.js"></script>
+        <script src="js/player.js"></script>
+        <script src="js/warez.js"></script>
+        <script src="js/location.js"></script>
+        <script src="js/ship_svgs.js"></script>
+        <script src="js/ship.js"></script>
+        <script src="js/pirateShip.js"></script>
+        <script src="js/tradingShip.js"></script>
+        <script src="js/fuzzShip.js"></script>
+        <script src="js/universe.js"></script>
+        <script src="js/upgrades.js"></script>
+        <script src="js/ui.js"></script>
+        <script src="js/main.js"></script>
+        <!--js_replace_end-->
+
+    </body>
+</html>

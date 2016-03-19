@@ -1,0 +1,467 @@
+#fps {
+    color:red;
+    font-weight: bold;
+}
+
+body {
+    background:#06060C;
+}
+body * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+.lwrC {
+    text-transform: lowercase;
+}
+
+#game-container {
+    background: #1B1C29;
+    background: radial-gradient(ellipse at center, #222333 0%,#11111B 100%);
+    /* background: radial-gradient(ellipse at center, #251f41 0%,#0f0f1d 100%); */
+    border: solid 1px rgb(59, 61, 93);
+    margin: 30px auto;
+    width: 99%;
+    height: 99%;
+    max-width: 1024px;
+    max-height: 726px;
+    text-transform: uppercase;
+    font-family: monospace;
+    color: #4FFD8A;
+    font-size: 1.2em;
+    font-weight: bold;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.canvas_layer {
+    position:absolute;
+    top:0;
+    left:0;
+}
+
+.scanlines-overlay {
+    position:absolute;
+    width:100%;
+    height:100%;
+    z-index:10000;
+    background: -webkit-repeating-linear-gradient(
+    top,
+    transparent 0px,
+    transparent 1px,
+    rgba(0,0,0,0.15) 1px,
+    rgba(0,0,0,0.15) 2px
+    );
+    -webkit-background-size: 100% 2px;
+    pointer-events: none;
+}
+
+#ui-elements{
+    width:100%;
+    height:100%;
+    position:absolute;
+    pointer-events: none;
+}
+#ui-elements * {
+    pointer-events: none;
+}
+#ui-elements .map {
+    width: 150px;
+    height: 150px;
+    background: rgba(28, 51, 45, 0.29);
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    border: solid 1px rgb(79, 253, 137);
+}
+
+#ui-elements .gauge {
+    width: 50%;
+    right: 20px;
+    position: absolute;
+}
+.hull.gauge {
+    bottom: 20px;
+}
+.shields.gauge {
+    bottom: 40px;
+}
+.fuel.gauge {
+    bottom: 60px;
+}
+
+#ui-elements .gauge .label {float:right;}
+#ui-elements .gauge .bar{
+    width: 50%;
+    height: 12px;
+    background: rgba(79, 253, 138, 0.07);
+    float: right;
+    margin: 1px 0 0 10px;
+    overflow: hidden;
+    border:1px solid #4FFD8A;
+}
+#ui-elements .gauge .remaining {
+    width:100%;
+    height:100%;
+    background: #4FFD8A;
+}
+.glow {
+    -webkit-filter: blur(3px);
+    opacity: 0.7;
+}
+
+
+#message {
+    width:0;
+    padding:20px;
+    background: rgba(9, 10, 21, 0.9);
+    border: solid 1px #4FFD8A;
+    margin:20px auto;
+    text-align: center;
+    display:none;
+    box-sizing: border-box;
+    color: rgba(79, 253, 138, 0)
+}
+#message.open {
+    display:block;
+    animation: open-menu 0.5s linear;
+    animation-fill-mode: forwards;
+}
+#message .title {
+    font-size:1.3em;
+    line-height:0;
+}
+
+
+@keyframes open-menu {
+    0% {
+        width:0;
+        opacity:0;
+    }
+    50% {
+        width:400px;
+        color: rgba(79, 253, 138, 0)
+    }
+    100% {
+        width:400px;
+        opacity:1;
+        color: rgba(79, 253, 138, 1)
+    }
+}
+
+
+
+
+.game-menu {
+    padding: 20px;
+    box-sizing: border-box;
+    background: rgb(9, 10, 21);
+    width: 750px;
+    height: 500px;
+    position: absolute;
+    left: 50%;
+    margin: 0 0 0 -375px;
+    z-index: 100;
+    border: solid 1px #4FFD8A;
+    display:none;
+}
+
+.game-menu.open {
+    display:block;
+    animation:station-menu-entry 0.5s linear;
+    animation-fill-mode: forwards;
+    top:320px;
+    height:0;
+    opacity:0;
+    /*-webkit-filter:blur(5px);*/
+}
+
+
+
+@keyframes station-menu-entry {
+    0% {
+        height:0;
+        opacity:0;
+        top:320px;
+    }
+    100% {
+        opacity:1;
+        height: 500px;
+        top:50px;
+    }
+}
+
+.game-menu .station-title {
+    margin:0 0 30px 0;
+    padding:0
+}
+
+
+.game-menu .monnies {
+    position:absolute;
+    top:20px;
+    right:20px;
+}
+
+
+
+.tabs {
+    margin:0 0 -1px 0;
+}
+
+.tabs .tab {
+    padding: 5px 10px;
+    display: inline-block;
+    border: solid 1px rgba(79, 253, 138, 0.4);
+    border-bottom: none;
+    cursor:pointer;
+    color: rgba(79, 253, 138, 0.61);
+}
+.tabs .tab.active {
+    border-bottom: 1px solid #090A15;
+    color:#4FFD8A;
+}
+.tabs .tab:hover {
+    color:#4FFD8A;
+}
+.game-menu .warez {
+    font-weight: normal;
+    border: solid 1px rgba(79, 253, 138, 0.4);
+    padding: 10px;
+    display:none;
+
+}
+.game-menu .warez.active {
+    display:block;
+}
+
+.game-menu .warez table{
+    width:100%;
+    border:none;
+}
+.game-menu .warez table th {
+    text-align: left;
+    padding: 6px 3px;
+}
+.game-menu .warez table tr, .game-menu .warez table td {
+    border: none;
+    margin: 0;
+    padding: 6px 3px;
+}
+.game-menu .warez table td {
+    font-size:0.9em;
+}
+.game-menu .warez table tbody tr:nth-child(odd){
+    background: rgba(79, 253, 138, 0.15);
+}
+
+.game-menu button {
+    padding: 2px 6px;
+    border: solid 1px rgba(79, 253, 138, 0.4);
+    font-weight: bold;
+    cursor: pointer;
+    background:none;
+    color:#4FFD8A;
+    outline:none;
+}
+.game-menu button:hover {
+    color: #05230F;
+    background: #4FFD8A;
+    border: solid 1px  #4FFD8A;
+}
+.game-menu button.disable {
+    cursor: default;
+    opacity: 0.2;
+}
+
+.game-menu button.disable:hover  {
+    cursor: default;
+    opacity: 0.2;
+    border: solid 1px rgba(79, 253, 138, 0.4);
+    background:none;
+    color:#4FFD8A;
+}
+
+
+.game-menu .exit-button {
+    padding:5px 10px;
+    position:absolute;
+    bottom:20px;
+    right:20px;
+    border: solid 1px rgba(79, 253, 138, 0.4);
+    cursor:pointer;
+}
+.game-menu .exit-button:hover {
+    color: #05230F;
+    background: #4FFD8A;
+    border: solid 1px  #4FFD8A;
+}
+
+#inventoryTable {
+    display:block;
+}
+
+
+
+#upgrades_table {}
+
+#upgrades_table .level {
+    height: 20px;
+    width: 8px;
+    background: rgba(79, 253, 138, 0.31);
+    margin: 3px;
+    float: left;
+}
+#upgrades_table .level.acquired {
+    background: rgba(79, 253, 138, 1);
+}
+
+
+
+/*SHAKE*/
+
+.shake #ui-elements, .shake .canvas_layer  {
+    animation: 0.1s linear;
+}
+.shake .canvas_layer {
+    animation:shake-horizontal 0.1s linear;
+}
+.shake #ui-elements .map, .shake #ui-elements .gauge .bar {
+    border: solid 1px #ff4746;
+}
+.shake #ui-elements .gauge .label  {
+    color:#ff4746;
+}
+.shake #ui-elements .gauge .remaining {
+    background: #ff4746;
+}
+.shake #ui-elements .map {
+    background: rgba(130, 13, 12, 0.9);
+}
+#game-container.shake {
+    background: radial-gradient(ellipse at center, #3a171d 0%,#210b0f 100%)
+}
+
+
+@keyframes shake-horizontal {
+    0% {
+        transform: translate(0px, 0px) rotate(0deg); }
+    2% {
+        transform: translate(-7px, 0px) rotate(0deg); }
+    4% {
+        transform: translate(-3px, 0px) rotate(0deg); }
+    34% {
+        transform: translate(-7px, 0px) rotate(0deg); }
+    36% {
+        transform: translate(1px, 0px) rotate(0deg); }
+    66% {
+        transform: translate(-4px, 0px) rotate(0deg); }
+    68% {
+        transform: translate(6px, 0px) rotate(0deg); }
+    98% {
+        transform: translate(-5px, 0px) rotate(0deg); }
+}
+
+
+.devby {
+    position:absolute;
+    bottom:20px;
+    left:20px;
+}
+a {
+    color: rgba(79, 253, 138, 0.5);
+    text-decoration: none;
+}
+a:hover {
+    color: rgba(79, 253, 138, 1);
+}
+
+
+
+/*.hoz {*/
+    /*top:50%;*/
+    /*width:100%;*/
+    /*height:1px;*/
+    /*background: greenyellow;*/
+    /*display:block;*/
+    /*position: absolute;*/
+/*}*/
+
+/*.vert {*/
+    /*top: 0%;*/
+    /*left: 50%;*/
+    /*width: 1px;*/
+    /*height: 100%;*/
+    /*background: greenyellow;*/
+    /*display: block;*/
+    /*position: absolute;*/
+/*}*/
+
+input[type=range] {
+    -webkit-appearance: none;
+    width: 140px;
+    margin:10px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    border: none;
+    height: 24px;
+    width: 8px;
+    border-radius: 0;
+    background: #4FFD8A;
+    cursor: pointer;
+    margin-top: -12px;
+}
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 2px;
+    cursor: pointer;
+    background: rgba(46, 132, 68, 1);
+    border-radius: 0;
+    border: none;
+}
+
+input[type=range]:focus::-webkit-slider-runnable-track {
+    background: rgba(46, 132, 68, 1);
+}
+input[type=range]:focus {
+    outline: none;
+}
+input[type=range]:disabled {
+    opacity:0.3;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

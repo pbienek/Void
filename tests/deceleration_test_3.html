@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Deceleration test</title>
+</head>
+<body>
+
+<style>
+
+    #test {
+        margin:0 auto;
+        background: grey;
+    }
+
+</style>
+
+
+<canvas id="test" width="960" height="400"></canvas>
+
+
+
+
+
+<script>
+
+    var testElement   = document.getElementById('test');
+    canvas  = testElement.getContext('2d');
+    canvas.imageSmoothingEnabled = true;
+
+
+    function getDistance(current_pos_X, current_pos_Y, target_pos_X, target_pos_Y) {
+        var XS, YS = 0;
+
+        XS = current_pos_X - target_pos_X;
+        XS = (XS * XS);
+
+        YS = current_pos_Y - target_pos_Y;
+        YS = (YS * YS);
+
+        return Math.sqrt(XS + YS);
+
+    }
+
+
+    function speedLimit(speed, top_speed) {
+
+        // CLAMP top speed - Otherwise the PlaYer accelerates indefinitelY
+        if (Math.abs(speed) > top_speed) {
+            if (speed > 0) {
+                speed = top_speed;
+            } else {
+                speed = (0 - top_speed);
+            }
+        }
+
+        return speed;
+    }
+
+
+    var car = function () {
+
+        this.x = 200;
+        this.y = 300;
+        this.rotation     = 0;
+        this.velocity     = {
+            x : 0,
+            y : 0
+        };
+        this.topSpeed     = 10;
+        this.acceleration = 0.05;
+        this.mass         = 10;
+        this.friction     = 0.00;
+
+
+        this.obstacles  = [
+            {x : 100, y : 100, size : 40, center : {x : 100, y : 100} },
+            {x : 300, y : 50,  size : 20, center : {x : 300, y : 50} },
+            {x : 550, y : 200, size : 30, center : {x : 550, y : 200} },
+            {x : 600, y : 150, size : 50, center : {x : 600, y : 150} }
+        ];
+
+
+        this.targetDestination = {
+            x : 910,
+            y : 300,
+            distance    : 0,
+            oldDistance : 0
+        };
+
+
+        document.getElementById("test").addEventListener('mousemove', function (e) {
+            this.targetDestination.x = e.offsetX;
+            this.targetDestination.y = e.offsetY;
+        }.bind(this));
+
+
+
+        var draw = function () {
+            canvas.clearRect(0, 0, 960, 400);
+
+            for(var i = 0; i < this.obstacles.length; i++) {
+
+                canvas.beginPath();
+                canvas.arc(this.obstacles[i].x, this.obstacles[i].y, this.obstacles[i].size, 0, 2 * Math.PI, false);
+                canvas.fillStyle = 'orange';
+                canvas.fill();
+
+                canvas.beginPath();
+                canvas.arc(this.obstacles[i].x, this.obstacles[i].y, 2, 0, 2 * Math.PI, false);
+                canvas.fillStyle = 'red';
+                canvas.fill();
+            }
+
+
+            canvas.beginPath();
+            canvas.arc(this.x, this.y, 10, 0, 2 * Math.PI, false);
+            canvas.fillStyle = '#fff';
+            canvas.fill();
+
+            canvas.beginPath();
+            canvas.arc(this.targetDestination.x, this.targetDestination.y, 10, 0, 2 * Math.PI, false);
+            canvas.fillStyle = 'red';
+            canvas.fill();
+
+
+
+
+
+        }.bind(this);
+
+
+
+        var normalize = function (norm) {
+            var len = Math.sqrt(norm.x * norm.x + norm.y * norm.y);
+            norm.x /= len;
+            norm.y /= len;
+
+            return norm
+        };
+
+
+
+        var truncate = function (vector, max) {
+            var i = max / 2;
+
+            i = i < 1.0 ? 1.0 : i;
+
+            return {
+                x : vector.x * i,
+                y : vector.y * i
+            }
+        };
+
+
+        var update = function() {
+
+            var desiredVelocity  = {};
+            var steeringVelocity = {};
+
+            var seek = function (target) {
+
+                var dist = {
+                    x : target.x - this.x,
+                    y : target.y - this.y
+                };
+                dist = normalize(dist);
+
+                target.distance      = getDistance(this.x, this.y, target.x, target.y);
+                var relativeSpeed    = Math.sqrt((this.velocity.x*this.velocity.x) + (this.velocity.y*this.velocity.y));
+                var stoppingDistance = (relativeSpeed/this.acceleration) * relativeSpeed * 0.5;
+
+                if (stoppingDistance >= target.distance) {
+
+                    desiredVelocity = {
+                        x : dist.x * (this.topSpeed * (target.distance / stoppingDistance)),
+                        y : dist.y * (this.topSpeed * (target.distance / stoppingDistance))
+                    };
+
+                    if (this.targetDestination.distance <= 1) {
+                        desiredVelocity = {
+                            x : 0,
+                            y : 0
+                        };
+                    }
+
+                } else {
+
+                    desiredVelocity = {
+                        x : dist.x * this.topSpeed,
+                        y : dist.y * this.topSpeed
+                    };
+                }
+
+            }.bind(this);
+
+
+
+            var flee = function (target) {
+
+                var dist = {
+                    x : this.x - target.x,
+                    y : this.y - target.y
+                };
+                dist = normalize(dist);
+
+                desiredVelocity = {
+                    x : dist.x * this.topSpeed,
+                    y : dist.y * this.topSpeed
+                };
+
+
+            }.bind(this);
+
+
+
+            var pursuit = function (target) {
+
+                var distance = getDistance(this.x, this.y, target.x, target.y);
+                var updatesAhead = distance / this.topSpeed;
+                var futurePosition = {
+                    x : (target.x + target.velocity.x * updatesAhead),
+                    y : (target.y + target.velocity.y * updatesAhead)
+                };
+
+                seek(futurePosition);
+            }.bind(this);
+
+
+            var evade = function (target) {
+                var distance       = getDistance(this.x, this.y, target.x, target.y);
+                var updatesAhead   = distance.length / this.topSpeed;
+                var futurePosition = {
+                    x : (target.x + target.velocity.x * updatesAhead),
+                    y : (target.y + target.velocity.y * updatesAhead)
+                };
+
+                flee(futurePosition);
+            }.bind(this);
+
+
+
+
+            var collisionAvoidance = function () {
+
+                var maxAvoidAhead = 100,
+                        maxForce      = 5.4,
+                        avoidForce    = 10;
+
+                var tmpVel  = {
+                    x : this.velocity.x,
+                    y : this.velocity.y
+                };
+                var normVel = normalize(tmpVel);
+
+
+
+                var tv = {
+                    x : this.velocity.x,
+                    y : this.velocity.y
+                };
+
+                tv = normalize(tv);
+                tv = {
+                    x : tv.x * (maxAvoidAhead * 0.5 * 2 / this.topSpeed),
+                    y : tv.y * (maxAvoidAhead * 0.5 * 2 / this.topSpeed)
+                };
+
+                var dynamic_length = (this.velocity.x + this.velocity.y) / this.topSpeed;
+
+                var ahead  = {
+                    x : (this.x + normVel.x * dynamic_length),
+                    y : (this.y + normVel.y * dynamic_length)
+                };
+
+
+
+                var lineIntersectsCircle = function (obstacle){
+
+                    var ahead2  = {
+                        x : (this.x + normVel.x * maxAvoidAhead * 0.5),
+                        y : (this.y + normVel.y * maxAvoidAhead * 0.5)
+                    };
+
+                    return  (getDistance(obstacle.center.x, obstacle.center.y, ahead.x, ahead.y) <= obstacle.size + 50 || getDistance(obstacle.center.x, obstacle.center.y, ahead2.x, ahead2.y) <= obstacle.size + 50 || getDistance(obstacle.center.x, obstacle.center.y, this.x, this.y) <= obstacle.size + 50)
+                }.bind(this);
+
+
+                var findMostThreateningObstacle = function () {
+                    var mostThreatening = null;
+
+                    for (var i = 0; i < this.obstacles.length; i++) {
+                        var obstacle  = this.obstacles[i];
+                        var collision = lineIntersectsCircle(obstacle);
+
+                        // "position" is the character's current position
+                        if (collision && (mostThreatening == null || getDistance(this.x, this.y, obstacle.x, obstacle.y) < getDistance(this.x, this.y, mostThreatening.x, mostThreatening.y))) {
+                            mostThreatening = obstacle;
+                        }
+                    }
+
+                    return mostThreatening;
+
+                }.bind(this);
+
+
+
+                var mostThreatening  = findMostThreateningObstacle();
+                var avoidance  = {x : 0, y : 0};
+
+                if (mostThreatening != null) {
+                    avoidance.x = ahead.x - mostThreatening.center.x;
+                    avoidance.y = ahead.y - mostThreatening.center.y;
+
+                    avoidance = normalize(avoidance);
+                    avoidance = {
+                        x : avoidance.x * avoidForce,
+                        y : avoidance.y * avoidForce
+                    }
+                } else {
+                    avoidance = {
+                        x : 0,
+                        y : 0
+                    };
+                }
+
+                return avoidance;
+
+            }.bind(this);
+
+
+
+            seek(this.targetDestination);
+
+            var avoidance = collisionAvoidance();
+
+
+            steeringVelocity = {
+                x : desiredVelocity.x - this.velocity.x + avoidance.x,
+                y : desiredVelocity.y - this.velocity.y + avoidance.y
+            };
+
+
+            steeringVelocity   = truncate(steeringVelocity, this.acceleration);
+            steeringVelocity.x = steeringVelocity.x / this.mass;
+            steeringVelocity.y = steeringVelocity.y / this.mass;
+
+
+
+
+            var tmpVelocity = {
+                x : this.velocity.x + steeringVelocity.x,
+                y : this.velocity.y + steeringVelocity.y
+            };
+
+
+            tmpVelocity = truncate(tmpVelocity, this.acceleration);
+            this.velocity.x = tmpVelocity.x;
+            this.velocity.y = tmpVelocity.y;
+
+
+            this.x += this.velocity.x;
+            this.y += this.velocity.y;
+
+
+        }.bind(this);
+
+
+        function animateMe() {
+            update();
+            draw();
+            requestAnimationFrame(animateMe);
+        }
+
+        animateMe();
+    };
+
+    car();
+
+
+
+
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
